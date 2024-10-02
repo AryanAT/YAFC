@@ -2,14 +2,16 @@ package com.invest.indices;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableTransactionManagement
-public class BetterIndexApplication {
+@EnableRetry
+public class BetterMutualFundApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(BetterIndexApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BetterMutualFundApplication.class, args);
+    }
 
 }
