@@ -11,7 +11,7 @@ public interface MutualFundService {
 
     ReturnOutput calculateReturn(ReturnInputs returnInputs);
 
-    List<ReturnOutput> calculateReturnForListOfMutualFunds(List<ReturnInputs> returnInputs);
+    PortfolioReport calculateReturnForListOfMutualFunds(List<ReturnInputs> returnInputs);
 
     List<SchemeNameAndCodeMapEntity> fuzzySearchMutualFund(String schemeName);
 

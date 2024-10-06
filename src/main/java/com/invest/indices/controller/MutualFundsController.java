@@ -27,7 +27,7 @@ public class MutualFundsController {
     }
 
     @GetMapping("/historicalReturns")
-    ResponseEntity<List<ReturnOutput>> historicalReturns(@RequestBody List<ReturnInputs> returnInputs) {
+    ResponseEntity<PortfolioReport> historicalReturns(@RequestBody List<ReturnInputs> returnInputs) {
         return ResponseEntity.ok(mutualFundService.calculateReturnForListOfMutualFunds(returnInputs));
     }
 

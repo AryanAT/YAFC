@@ -55,8 +55,21 @@ public class MutualFundServiceImpl implements MutualFundService {
     }
 
     @Override
-    public List<ReturnOutput> calculateReturnForListOfMutualFunds(List<ReturnInputs> returnInputs) {
-        return returnInputs.stream().map(calculateReturns::with).toList();
+    public PortfolioReport calculateReturnForListOfMutualFunds(List<ReturnInputs> returnInputs) {
+        List<ReturnOutput> returnOutputs = returnInputs.stream().map(calculateReturns::with).toList();
+        Double portfolioInvestmentAmount = 0.0;
+        Double portfolioFinalAmount = 0.0;
+        Double portfolioAbsoluteReturns;
+        for (ReturnOutput returnOutput: returnOutputs) {
+            portfolioInvestmentAmount += returnOutput.getInvAmount();
+            portfolioFinalAmount += returnOutput.getFinalAmount();
+        }
+        portfolioAbsoluteReturns = ((portfolioFinalAmount * 100) / portfolioInvestmentAmount) - 100;
+        for (ReturnOutput returnOutput: returnOutputs) {
+            double weightedContribution = (returnOutput.getFinalAmount() / portfolioFinalAmount) * 100;
+            returnOutput.setReturnContributions(weightedContribution);
+        }
+        return new PortfolioReport(returnOutputs, portfolioAbsoluteReturns, portfolioInvestmentAmount, portfolioFinalAmount);
     }
 
     @Override

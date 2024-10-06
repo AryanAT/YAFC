@@ -35,7 +35,7 @@ public class CalculateReturns {
             toDate = DATE_FORMAT.parse(returnInputs.getToDate());
         } catch (ParseException exception) {
             System.out.println("Invalid Date");
-            return new ReturnOutput(0.0, 0.0, mutualFundEntityList.get(0).getSchemeName());
+            return new ReturnOutput(0.0, 0.0, mutualFundEntityList.get(0).getSchemeName(), 0.0);
         }
 
         Date startOfFromMonth = adjustToStartOfMonth(fromDate);
