@@ -1,9 +1,6 @@
 package com.invest.indices.service;
 
-import com.invest.indices.domain.model.MutualFund;
-import com.invest.indices.domain.model.MutualFundEntity;
-import com.invest.indices.domain.model.ReturnInputs;
-import com.invest.indices.domain.model.SchemeNameAndCodeMapEntity;
+import com.invest.indices.domain.model.*;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -12,7 +9,9 @@ public interface MutualFundService {
 
     List<MutualFundEntity> getAll();
 
-    Double calculateReturn(ReturnInputs returnInputs);
+    ReturnOutput calculateReturn(ReturnInputs returnInputs);
+
+    List<ReturnOutput> calculateReturnForListOfMutualFunds(List<ReturnInputs> returnInputs);
 
     List<SchemeNameAndCodeMapEntity> fuzzySearchMutualFund(String schemeName);
 

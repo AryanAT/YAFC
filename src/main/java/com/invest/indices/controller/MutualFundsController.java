@@ -1,9 +1,6 @@
 package com.invest.indices.controller;
 
-import com.invest.indices.domain.model.MutualFund;
-import com.invest.indices.domain.model.MutualFundEntity;
-import com.invest.indices.domain.model.ReturnInputs;
-import com.invest.indices.domain.model.SchemeNameAndCodeMapEntity;
+import com.invest.indices.domain.model.*;
 import com.invest.indices.service.MutualFundService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,8 +27,8 @@ public class MutualFundsController {
     }
 
     @GetMapping("/historicalReturns")
-    ResponseEntity<Double> historicalReturns(@RequestBody ReturnInputs returnInputs) {
-        return ResponseEntity.ok(mutualFundService.calculateReturn(returnInputs));
+    ResponseEntity<List<ReturnOutput>> historicalReturns(@RequestBody List<ReturnInputs> returnInputs) {
+        return ResponseEntity.ok(mutualFundService.calculateReturnForListOfMutualFunds(returnInputs));
     }
 
     @GetMapping("/search/{mutualFundName}")

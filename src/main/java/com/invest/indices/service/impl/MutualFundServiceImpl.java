@@ -3,11 +3,7 @@ package com.invest.indices.service.impl;
 import com.invest.indices.action.CalculateReturns;
 import com.invest.indices.domain.errors.InvalidResponseException;
 import com.invest.indices.domain.errors.MutualFundExistsException;
-import com.invest.indices.domain.model.MutualFund;
-import com.invest.indices.domain.model.PriceData;
-import com.invest.indices.domain.model.MutualFundEntity;
-import com.invest.indices.domain.model.ReturnInputs;
-import com.invest.indices.domain.model.SchemeNameAndCodeMapEntity;
+import com.invest.indices.domain.model.*;
 import com.invest.indices.infra.repository.MutualFundRepository;
 import com.invest.indices.infra.repository.SchemeNameAndCodeMapRepository;
 import com.invest.indices.service.MutualFundService;
@@ -54,8 +50,13 @@ public class MutualFundServiceImpl implements MutualFundService {
     }
 
     @Override
-    public Double calculateReturn(ReturnInputs returnInputs) {
+    public ReturnOutput calculateReturn(ReturnInputs returnInputs) {
         return calculateReturns.with(returnInputs);
+    }
+
+    @Override
+    public List<ReturnOutput> calculateReturnForListOfMutualFunds(List<ReturnInputs> returnInputs) {
+        return returnInputs.stream().map(calculateReturns::with).toList();
     }
 
     @Override
@@ -172,7 +173,7 @@ public class MutualFundServiceImpl implements MutualFundService {
     }
 
     @Data
-    private static class MonthYear {
+    private static final class MonthYear {
         private final Month month;
         private final int year;
     }

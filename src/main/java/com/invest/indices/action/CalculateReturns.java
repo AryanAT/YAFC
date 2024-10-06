@@ -2,12 +2,14 @@ package com.invest.indices.action;
 
 import com.invest.indices.domain.model.MutualFundEntity;
 import com.invest.indices.domain.model.ReturnInputs;
+import com.invest.indices.domain.model.ReturnOutput;
 import com.invest.indices.infra.repository.MutualFundRepository;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -20,10 +22,12 @@ public class CalculateReturns {
         this.mutualFundRepository = mutualFundRepository;
     }
 
-    public Double with(ReturnInputs returnInputs) {
+    public ReturnOutput with(ReturnInputs returnInputs) {
         double totalUnitsPurchased = 0;
+        double totalInvestmentAmount = 0;
+        double absoluteReturns;
+        double finalAmount;
         List<MutualFundEntity> mutualFundEntityList = mutualFundRepository.findBySchemeCode(returnInputs.getSchemeCode());
-
         Date fromDate;
         Date toDate;
         try {
@@ -31,7 +35,7 @@ public class CalculateReturns {
             toDate = DATE_FORMAT.parse(returnInputs.getToDate());
         } catch (ParseException exception) {
             System.out.println("Invalid Date");
-            return 0.0;
+            return new ReturnOutput(0.0, 0.0, mutualFundEntityList.get(0).getSchemeName());
         }
 
         Date startOfFromMonth = adjustToStartOfMonth(fromDate);
@@ -45,16 +49,24 @@ public class CalculateReturns {
                     } catch (ParseException e) {
                         throw new RuntimeException(e);
                     }
-                })
+                }).sorted(Comparator.comparing(mutualFundEntity -> {
+                    try {
+                        return DATE_FORMAT.parse(mutualFundEntity.getDate());
+                    } catch (ParseException e) {
+                        throw new RuntimeException(e);
+                    }
+                }))
                 .toList();
 
         for (MutualFundEntity mutualFundEntity : filteredMutualFundEntityList) {
             totalUnitsPurchased += returnInputs.getInvAmount() / mutualFundEntity.getNav();
+            totalInvestmentAmount += returnInputs.getInvAmount();
         }
-
+        finalAmount = totalUnitsPurchased * filteredMutualFundEntityList.get(filteredMutualFundEntityList.size() - 1).getNav();
+        absoluteReturns = ((finalAmount * 100) / totalInvestmentAmount) - 100;
         return filteredMutualFundEntityList.isEmpty()
-                ? 0.0
-                : totalUnitsPurchased * filteredMutualFundEntityList.get(filteredMutualFundEntityList.size() - 1).getNav();
+                ? new ReturnOutput(0.0, 0.0, mutualFundEntityList.get(0).getSchemeName(), absoluteReturns)
+                : new ReturnOutput(finalAmount, totalInvestmentAmount, mutualFundEntityList.get(0).getSchemeName(), absoluteReturns);
     }
 
     private Date adjustToStartOfMonth(Date date) {
