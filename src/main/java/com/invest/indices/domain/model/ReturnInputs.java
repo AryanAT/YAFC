@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class ReturnInputs {
-    private int invAmount;
+    private Double invAmount;
     private int schemeCode;
     private String fromDate;
     private String toDate;

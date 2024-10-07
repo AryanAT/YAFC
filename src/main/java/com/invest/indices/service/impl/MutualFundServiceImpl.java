@@ -65,11 +65,15 @@ public class MutualFundServiceImpl implements MutualFundService {
             portfolioFinalAmount += returnOutput.getFinalAmount();
         }
         portfolioAbsoluteReturns = ((portfolioFinalAmount * 100) / portfolioInvestmentAmount) - 100;
+        Double portfolioProfitOrLoss = portfolioFinalAmount - portfolioInvestmentAmount;
         for (ReturnOutput returnOutput: returnOutputs) {
+            double fundsProfitOrLoss = returnOutput.getFinalAmount() - returnOutput.getInvAmount();
             double weightedContribution = (returnOutput.getFinalAmount() / portfolioFinalAmount) * 100;
-            returnOutput.setReturnContributions(weightedContribution);
+            double returnsPercentageShareInPortfolio = (fundsProfitOrLoss / portfolioProfitOrLoss) * 100;
+            returnOutput.setAmountPercentageShareInPortfolio(weightedContribution);
+            returnOutput.setReturnsPercentageShareInPortfolio(returnsPercentageShareInPortfolio);
         }
-        return new PortfolioReport(returnOutputs, portfolioAbsoluteReturns, portfolioInvestmentAmount, portfolioFinalAmount);
+        return new PortfolioReport(returnOutputs, portfolioAbsoluteReturns, portfolioInvestmentAmount, portfolioFinalAmount, portfolioProfitOrLoss);
     }
 
     @Override

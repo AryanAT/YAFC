@@ -12,4 +12,5 @@ public class PortfolioReport {
     private Double portfolioAbsoluteReturns;
     private Double portfolioTotalInvestment;
     private Double portfolioFinalAmount;
+    private Double portfolioProfitOrLoss;
 }
