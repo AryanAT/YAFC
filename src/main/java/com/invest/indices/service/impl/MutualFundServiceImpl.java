@@ -4,8 +4,7 @@ import com.invest.indices.action.CalculateReturns;
 import com.invest.indices.domain.errors.InvalidResponseException;
 import com.invest.indices.domain.errors.MutualFundExistsException;
 import com.invest.indices.domain.model.*;
-import com.invest.indices.infra.repository.MutualFundRepository;
-import com.invest.indices.infra.repository.SchemeNameAndCodeMapRepository;
+import com.invest.indices.infra.repository.*;
 import com.invest.indices.service.MutualFundService;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +13,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
+import java.util.Comparator;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
@@ -31,17 +30,27 @@ public class MutualFundServiceImpl implements MutualFundService {
     private static Integer counter = 0;
 
     private final MutualFundRepository mutualFundRepository;
+    private final AnnualReturnRepository annualReturnRepository;
     private final CalculateReturns calculateReturns;
     private final SchemeNameAndCodeMapRepository schemeNameAndCodeMapRepository;
+    private final ThreeYearCAGRRepository threeYearCAGRRepository;
+    private final FiveYearCAGRRepository fiveYearCAGRRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
     public MutualFundServiceImpl(
             MutualFundRepository mutualFundRepository,
-            CalculateReturns calculateReturns, SchemeNameAndCodeMapRepository schemeNameAndCodeMapRepository
+            CalculateReturns calculateReturns,
+            SchemeNameAndCodeMapRepository schemeNameAndCodeMapRepository,
+            AnnualReturnRepository annualReturnRepository,
+            ThreeYearCAGRRepository threeYearCAGRRepository,
+            FiveYearCAGRRepository fiveYearCAGRRepository
     ) {
         this.mutualFundRepository = mutualFundRepository;
         this.calculateReturns = calculateReturns;
         this.schemeNameAndCodeMapRepository = schemeNameAndCodeMapRepository;
+        this.annualReturnRepository = annualReturnRepository;
+        this.threeYearCAGRRepository = threeYearCAGRRepository;
+        this.fiveYearCAGRRepository = fiveYearCAGRRepository;
     }
 
     @Override
@@ -186,6 +195,95 @@ public class MutualFundServiceImpl implements MutualFundService {
         // Save any remaining entities
         if (!mutualFundEntityList.isEmpty()) {
             mutualFundRepository.saveAll(mutualFundEntityList);
+        }
+    }
+    private void calculateAnnualGrowth(List<MutualFundEntity> mutualFundEntities) {
+        if (mutualFundEntities.size() < 12) {
+            System.out.println("Less than 12 months cant calculate annual return");
+            return;
+        }
+        double lastNav = Double.NaN;
+        for (int i = 0; i < mutualFundEntities.size(); i++) {
+            MutualFundEntity mutualFundEntity = mutualFundEntities.get(i);
+            LocalDate parsedDate = parseDate(mutualFundEntity.getDate());
+            if (parsedDate.getMonth().equals(Month.JANUARY)) {
+               lastNav = mutualFundEntity.getNav();
+               break;
+            }
+        }
+
+        double annualReturn;
+
+        List<AnnualReturnEntity> annualReturnEntities = new ArrayList<>();
+        for (int i = 0; i < mutualFundEntities.size(); i++) {
+            MutualFundEntity mutualFundEntity = mutualFundEntities.get(i);
+            LocalDate date = parseDate(mutualFundEntity.getDate());
+            if (date.getMonth().equals(Month.DECEMBER)) {
+                if (!Double.isNaN(lastNav)) {
+                    annualReturn = ((mutualFundEntity.getNav() - lastNav) / lastNav) * 100;
+                    lastNav = mutualFundEntity.getNav();
+                    annualReturnEntities.add(new AnnualReturnEntity(UUID.randomUUID(), date.getYear(), mutualFundEntity.getSchemeName(),  mutualFundEntity.getSchemeCode(), annualReturn));
+                }
+            }
+        }
+        annualReturnRepository.saveAll(annualReturnEntities);
+    }
+
+    private void calculateCAGR(List<MutualFundEntity> mutualFundEntities, int term) {
+        if (mutualFundEntities.isEmpty()) {
+            // TODO Throw exception
+            System.out.println("Empty List Provided");
+            return;
+        }
+        if (mutualFundEntities.size() < term * 12) {
+            System.out.println(String.format("Less than %d years, cannot calculate CAGR", term));
+            return;
+        }
+
+        List<ThreeYearCAGR> threeYearCAGRS = new ArrayList<>();
+        List<FiveYearCAGR> fiveYearCAGRS = new ArrayList<>();
+        //  - (term * 12) in loop to avoid out of bound access in mutualFundEntities.get(i + (term * 12) - 1).getNav()
+        for (int i = 0; i < mutualFundEntities.size() - (term * 12); i++) {
+            MutualFundEntity startEntity = mutualFundEntities.get(i);
+            MutualFundEntity endEntity = mutualFundEntities.get(i + (term * 12) - 1);
+            double startNav = startEntity.getNav();
+            double endNav = endEntity.getNav();
+            Double compoundedAnnualGrowthRate = (Math.pow((endNav / startNav), (1.0 / term)) - 1) * 100;
+            if (term == 3) {
+                threeYearCAGRS.add(new ThreeYearCAGR(UUID.randomUUID(), endEntity.getDate(), startEntity.getSchemeName(),  startEntity.getSchemeCode(), compoundedAnnualGrowthRate));
+            }
+            if (term == 5) {
+                fiveYearCAGRS.add(new FiveYearCAGR(UUID.randomUUID(), endEntity.getDate(), startEntity.getSchemeName(),  startEntity.getSchemeCode(), compoundedAnnualGrowthRate));
+            }
+        }
+        if (term == 3) {
+            threeYearCAGRRepository.saveAll(threeYearCAGRS);
+        }
+        if (term == 5) {
+            fiveYearCAGRRepository.saveAll(fiveYearCAGRS);
+        }
+    }
+
+    @Override
+    public void updateAnnualReturn() {
+        List<SchemeNameAndCodeMapEntity> schemeNameAndCodeMapEntities = schemeNameAndCodeMapRepository.findAll();
+        for (SchemeNameAndCodeMapEntity schemeNameAndCodeMapEntity : schemeNameAndCodeMapEntities) {
+            Integer schemeCode = schemeNameAndCodeMapEntity.getSchemeCode();
+            List<MutualFundEntity> mutualFundEntities = mutualFundRepository.findBySchemeCode(schemeCode)
+                    .stream().sorted(Comparator.comparing(mutualFundEntity -> parseDate(mutualFundEntity.getDate()))).toList();
+            calculateAnnualGrowth(mutualFundEntities);
+        }
+    }
+
+    @Override
+    public void updateCAGR() {
+        List<SchemeNameAndCodeMapEntity> schemeNameAndCodeMapEntities = schemeNameAndCodeMapRepository.findAll();
+        for (SchemeNameAndCodeMapEntity schemeNameAndCodeMapEntity : schemeNameAndCodeMapEntities) {
+            Integer schemeCode = schemeNameAndCodeMapEntity.getSchemeCode();
+            List<MutualFundEntity> mutualFundEntities = mutualFundRepository.findBySchemeCode(schemeCode)
+                    .stream().sorted(Comparator.comparing(mutualFundEntity -> parseDate(mutualFundEntity.getDate()))).toList();
+            calculateCAGR(mutualFundEntities, 3);
+            calculateCAGR(mutualFundEntities, 5);
         }
     }
 

@@ -20,6 +20,10 @@ public interface MutualFundService {
     ResponseEntity<List<MutualFundEntity>> getHistoricalNav(Integer id);
 
     void saveAllMutualFunds();
+
+    void updateAnnualReturn();
+
+    void updateCAGR();
 }
 
 

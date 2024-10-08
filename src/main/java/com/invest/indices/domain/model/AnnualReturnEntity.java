@@ -5,28 +5,25 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Column;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Entity
 @Data
-@ToString
-@Table(name = "mutual_funds", uniqueConstraints = @UniqueConstraint(columnNames = {"scheme_code", "date"}))
-public class MutualFundEntity {
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name = "annual_return_entity", uniqueConstraints = @UniqueConstraint(columnNames = {"scheme_code", "date"}))
+public class AnnualReturnEntity {
     @Id
     private UUID uuid;
-    private String date;
-    private double nav;
+    private int year;
     @Column(name = "scheme_name")
     private String schemeName;
     @Column(name = "scheme_code")
     private int schemeCode;
-    @Column(name = "scheme_category")
-    private String schemeCategory;
-    @Column(name = "scheme_type")
-    private String schemeType;
-    @Column(name = "fund_house")
-    private String funHouse;
+    @Column(name = "annual_return")
+    private Double annualReturn;
 }

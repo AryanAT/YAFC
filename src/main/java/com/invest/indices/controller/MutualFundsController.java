@@ -4,6 +4,7 @@ import com.invest.indices.domain.model.*;
 import com.invest.indices.service.MutualFundService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,6 +52,18 @@ public class MutualFundsController {
     @GetMapping("/saveAll")
     public ResponseEntity<String> saveAllMutualFunds() {
         mutualFundService.saveAllMutualFunds();
+        return ResponseEntity.ok("All Mutual funds processed and saved in Database");
+    }
+
+    @PostMapping("/updateAnnualReturns")
+    public ResponseEntity<String> annualGrowth() {
+        mutualFundService.updateAnnualReturn();
+        return ResponseEntity.ok("All Mutual funds processed and saved in Database");
+    }
+
+    @PostMapping("/updateCAGR")
+    public ResponseEntity<String> cagrGrowth() {
+        mutualFundService.updateCAGR();
         return ResponseEntity.ok("All Mutual funds processed and saved in Database");
     }
 }
