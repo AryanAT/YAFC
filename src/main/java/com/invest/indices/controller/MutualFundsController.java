@@ -55,6 +55,11 @@ public class MutualFundsController {
         return ResponseEntity.ok("All Mutual funds processed and saved in Database");
     }
 
+    @PostMapping("/simpleSip")
+    public ResponseEntity<SimpleSIPOutput> calculateSimpleSip(@RequestBody SimpleSIPInput simpleSIPInput) {
+        return ResponseEntity.ok(mutualFundService.getSimpleSip(simpleSIPInput));
+    }
+
     @PostMapping("/updateAnnualReturns")
     public ResponseEntity<String> annualGrowth() {
         mutualFundService.updateAnnualReturn();

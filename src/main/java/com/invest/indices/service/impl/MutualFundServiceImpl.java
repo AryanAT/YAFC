@@ -13,6 +13,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Comparator;
 import java.time.LocalDate;
 import java.time.Month;
@@ -285,6 +287,24 @@ public class MutualFundServiceImpl implements MutualFundService {
             calculateCAGR(mutualFundEntities, 3);
             calculateCAGR(mutualFundEntities, 5);
         }
+    }
+
+    @Override
+    public SimpleSIPOutput getSimpleSip(SimpleSIPInput simpleSIPInput) {
+        double monthlyReturnPercentage = simpleSIPInput.getExpectedAnnualReturn() / 12 / 100;
+        int tenureInMonths = simpleSIPInput.getTenureInYears() * 12;
+        long investedAmount = (long) simpleSIPInput.getAmount() * tenureInMonths;
+        long finalAmount = Math.round(simpleSIPInput.getAmount() * ((Math.pow(1 + monthlyReturnPercentage, tenureInMonths) - 1) / monthlyReturnPercentage) * (1 + monthlyReturnPercentage));
+        double investmentsMultipliedBy = (double) finalAmount / investedAmount;
+        return new SimpleSIPOutput(
+                finalAmount,
+                investedAmount,
+                finalAmount - investedAmount,
+                simpleSIPInput.getAmount(),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                LocalDate.now().plusYears(simpleSIPInput.getTenureInYears()).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                investmentsMultipliedBy
+        );
     }
 
     @Data

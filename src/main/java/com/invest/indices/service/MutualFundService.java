@@ -24,6 +24,8 @@ public interface MutualFundService {
     void updateAnnualReturn();
 
     void updateCAGR();
+
+    SimpleSIPOutput getSimpleSip(SimpleSIPInput simpleSIPInput);
 }
 
 

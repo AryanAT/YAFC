@@ -14,5 +14,5 @@ import java.util.UUID;
 public interface FiveYearCAGRRepository extends JpaRepository<FiveYearCAGR, UUID> {
 
     @Transactional
-    List<AnnualReturnEntity> findBySchemeCode(Integer id);
+    List<FiveYearCAGR> findBySchemeCode(Integer id);
 }
