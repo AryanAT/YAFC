@@ -85,7 +85,7 @@
     <module name="RegexpSingleline">
         <property name="format" value="\s+$"/>
         <property name="minimum" value="0"/>
-        <property name="maximum" value="0"/>
+        <property name="maximum" value="1"/>
         <property name="message" value="Line has trailing spaces."/>
     </module>
 

@@ -1,37 +1,41 @@
 package com.invest.indices.action;
 
-import com.invest.indices.domain.model.*;
+import com.invest.indices.domain.model.FiveYearCAGR;
+import com.invest.indices.domain.model.MutualFundEntity;
+import com.invest.indices.domain.model.ReturnInputs;
+import com.invest.indices.domain.model.ReturnOutput;
+import com.invest.indices.domain.model.ThreeYearCAGR;
+import com.invest.indices.infra.repository.AnnualReturnRepository;
 import com.invest.indices.infra.repository.FiveYearCAGRRepository;
 import com.invest.indices.infra.repository.MutualFundRepository;
 import com.invest.indices.infra.repository.ThreeYearCAGRRepository;
 import org.decampo.xirr.Transaction;
 import org.decampo.xirr.Xirr;
-import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
 import org.springframework.stereotype.Service;
-
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 
 @Service
 public class CalculateReturns {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
     private final MutualFundRepository mutualFundRepository;
+    private final AnnualReturnRepository annualReturnRepository;
     private final ThreeYearCAGRRepository threeYearCAGRRepository;
     private final FiveYearCAGRRepository fiveYearCAGRRepository;
 
 
-    public CalculateReturns(MutualFundRepository mutualFundRepository, ThreeYearCAGRRepository threeYearCAGRRepository, FiveYearCAGRRepository fiveYearCAGRRepository) {
+    public CalculateReturns(
+            MutualFundRepository mutualFundRepository,
+            AnnualReturnRepository annualReturnRepository,
+            ThreeYearCAGRRepository threeYearCAGRRepository,
+            FiveYearCAGRRepository fiveYearCAGRRepository
+    ) {
         this.mutualFundRepository = mutualFundRepository;
+        this.annualReturnRepository = annualReturnRepository;
         this.threeYearCAGRRepository = threeYearCAGRRepository;
         this.fiveYearCAGRRepository = fiveYearCAGRRepository;
     }
@@ -45,35 +49,17 @@ public class CalculateReturns {
 
 
         List<MutualFundEntity> mutualFundEntityList = mutualFundRepository.findBySchemeCode(returnInputs.getSchemeCode());
-        Date fromDate;
-        Date toDate;
-        try {
-            fromDate = DATE_FORMAT.parse(returnInputs.getFromDate());
-            toDate = DATE_FORMAT.parse(returnInputs.getToDate());
-        } catch (ParseException exception) {
-            System.out.println("Invalid Date");
-            // TODO replcae this with empty constructor call
-            return new ReturnOutput(0.0, 0.0, mutualFundEntityList.get(0).getSchemeName(), 0.0, 0.0, 0.0, 0.0, 0.0);
-        }
+        LocalDate fromDate = parseDateString(returnInputs.getFromDate());
+        LocalDate toDate = parseDateString(returnInputs.getToDate());
 
-        Date startOfFromMonth = adjustToStartOfMonth(fromDate);
-        Date endOfToMonth = adjustToEndOfMonth(toDate);
+        LocalDate startOfFromMonth = adjustToStartOfMonth(fromDate);
+        LocalDate endOfToMonth = adjustToEndOfMonth(toDate);
 
         List<MutualFundEntity> filteredMutualFundEntityList = mutualFundEntityList.stream()
                 .filter(mutualFundEntity -> {
-                    try {
-                        Date entityDate = DATE_FORMAT.parse(mutualFundEntity.getDate());
-                        return !entityDate.before(startOfFromMonth) && !entityDate.after(endOfToMonth);
-                    } catch (ParseException e) {
-                        throw new RuntimeException(e);
-                    }
-                }).sorted(Comparator.comparing(mutualFundEntity -> {
-                    try {
-                        return DATE_FORMAT.parse(mutualFundEntity.getDate());
-                    } catch (ParseException e) {
-                        throw new RuntimeException(e);
-                    }
-                }))
+                        LocalDate entityDate = parseDateString(mutualFundEntity.getDate());
+                        return !entityDate.isBefore(startOfFromMonth) && !entityDate.isAfter(endOfToMonth);
+                }).sorted(Comparator.comparing(mutualFundEntity -> parseDateString(mutualFundEntity.getDate())))
                 .toList();
         if (filteredMutualFundEntityList.isEmpty()) {
             //TODO Throw Exception
@@ -93,6 +79,13 @@ public class CalculateReturns {
         double xirr = new Xirr(transactions).xirr() * 100;
         double threeYearRollingReturn = getThreeYearRollingReturns(returnInputs.getSchemeCode(), LocalDate.now());
         double fiveYearRollingReturn = getFiveYearRollingReturns(returnInputs.getSchemeCode(), LocalDate.now());
+        String sipStartDate = returnInputs.getFromDate();
+        String sipEndDate = returnInputs.getFromDate();
+        Double investmentMultipliedBy = finalAmount / totalInvestmentAmount;
+        Double oneYearCAGR = annualReturnRepository.findBySchemeCodeAndYear(returnInputs.getSchemeCode(), toDate.getYear() - 1).getAnnualReturn();
+        Double fiveYearCAGR = fiveYearCAGRRepository.findLatestBySchemeCodeAndDate(returnInputs.getSchemeCode(), returnInputs.getToDate()).get().getFiveYearCAGR();
+        Double threeYearCAGR = threeYearCAGRRepository.findLatestBySchemeCodeAndDate(returnInputs.getSchemeCode(), returnInputs.getToDate()).get().getThreeYearCAGR();
+
         return new ReturnOutput(
                 finalAmount,
                 totalInvestmentAmount,
@@ -101,22 +94,22 @@ public class CalculateReturns {
                 totalProfitOrLoss,
                 xirr,
                 threeYearRollingReturn,
-                fiveYearRollingReturn
+                fiveYearRollingReturn,
+                sipStartDate,
+                sipEndDate,
+                investmentMultipliedBy,
+                oneYearCAGR,
+                threeYearCAGR,
+                fiveYearCAGR
         );
     }
 
-    private Date adjustToStartOfMonth(Date date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        return calendar.getTime();
+    private LocalDate adjustToStartOfMonth(LocalDate date) {
+        return date.withDayOfMonth(1);
     }
 
-    private Date adjustToEndOfMonth(Date date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-        return calendar.getTime();
+    private LocalDate adjustToEndOfMonth(LocalDate date) {
+        return date.withDayOfMonth(date.lengthOfMonth());
     }
 
     private String dateFormatter(String date) {

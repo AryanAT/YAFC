@@ -13,4 +13,7 @@ public interface AnnualReturnRepository extends JpaRepository<AnnualReturnEntity
 
     @Transactional
     List<AnnualReturnEntity> findBySchemeCode(Integer id);
+
+    @Transactional
+    AnnualReturnEntity findBySchemeCodeAndYear(Integer id, Integer year);
 }
