@@ -8,10 +8,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableRetry
-public class BetterMutualFundApplication {
+public class YAFC {
 
     public static void main(String[] args) {
-        SpringApplication.run(BetterMutualFundApplication.class, args);
+        SpringApplication.run(YAFC.class, args);
     }
 
 }

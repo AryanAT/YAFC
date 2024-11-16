@@ -12,7 +12,6 @@ import com.invest.indices.infra.repository.ThreeYearCAGRRepository;
 import org.decampo.xirr.Transaction;
 import org.decampo.xirr.Xirr;
 import org.springframework.stereotype.Service;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;

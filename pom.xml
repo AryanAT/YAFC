@@ -8,10 +8,10 @@
 		<version>3.2.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.invest</groupId>
-	<artifactId>indices</artifactId>
+	<groupId>com.YAFC</groupId>
+	<artifactId>mutual-funds</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>betterIndex</name>
+	<name>SIP</name>
 	<description>Spring boot project to compare indexes</description>
 	<properties>
 		<java.version>17</java.version>
