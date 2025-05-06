@@ -3,7 +3,6 @@ package com.invest.indices.domain.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +14,11 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "annual_return_entity", uniqueConstraints = @UniqueConstraint(columnNames = {"scheme_code", "date"}))
+@Table(name = "annual_return_entity")
+/*
+ uniqueConstraints = @UniqueConstraint(columnNames = {"scheme_code", "year"})
+ Unique Constraint not required as these are calculated on calendar year dates
+ */
 public class AnnualReturnEntity {
     @Id
     private UUID uuid;
