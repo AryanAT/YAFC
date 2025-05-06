@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/mutual-funds")
 public class MutualFundsController {
 
@@ -27,7 +29,7 @@ public class MutualFundsController {
         return mutualFundService.getAll();
     }
 
-    @GetMapping("/historicalReturns")
+    @PostMapping("/historicalReturns")
     ResponseEntity<PortfolioReport> historicalReturns(@RequestBody List<ReturnInputs> returnInputs) {
         return ResponseEntity.ok(mutualFundService.calculateReturnForListOfMutualFunds(returnInputs));
     }
