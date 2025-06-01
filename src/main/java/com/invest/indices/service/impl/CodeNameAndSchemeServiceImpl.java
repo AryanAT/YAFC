@@ -1,5 +1,7 @@
 package com.invest.indices.service.impl;
 
+import com.invest.indices.common.Utils;
+import com.invest.indices.domain.model.MutualFundEntity;
 import com.invest.indices.domain.model.SchemeNameAndCodeMapEntity;
 import com.invest.indices.infra.repository.MutualFundRepository;
 import com.invest.indices.infra.repository.SchemeNameAndCodeMapRepository;
@@ -9,9 +11,9 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,6 +58,41 @@ public class CodeNameAndSchemeServiceImpl implements CodeNameAndSchemeService {
                 tempSchemeNameAndCodeMapEntityList.clear();
                 System.out.println("Saved a batch of " + batch + " records");
             }
+        }
+    }
+
+    @Override
+    @Retryable(value = {DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 2000))
+    public void updateInceptionAndEndDate() {
+        List<SchemeNameAndCodeMapEntity> batch = new ArrayList<>();
+        int batchSize = 100;
+
+        List<Integer> listOfSchemeCodes = schemeNameAndCodeMapRepository.findAll().stream().map(SchemeNameAndCodeMapEntity::getSchemeCode).toList();
+        for (Integer schemeCode: listOfSchemeCodes) {
+            List<MutualFundEntity> mutualFundEntityList =
+                mutualFundRepository.findBySchemeCode(schemeCode).stream()
+                        .sorted(Comparator.comparing(mutualFundEntity -> Utils.parseDate(mutualFundEntity.getDate()))).toList();
+
+            if (mutualFundEntityList.isEmpty()) {
+                continue;
+            }
+
+            String inceptionDate = mutualFundEntityList.get(0).getDate();
+            String lastDate = mutualFundEntityList.get(mutualFundEntityList.size() - 1).getDate();
+
+            SchemeNameAndCodeMapEntity schemeNameAndCodeMapEntity = schemeNameAndCodeMapRepository.findById(schemeCode)
+                    .orElseThrow(() -> new IllegalStateException("Scheme not found: " + schemeCode));
+            schemeNameAndCodeMapEntity.setInceptionDate(inceptionDate);
+            schemeNameAndCodeMapEntity.setLastDate(lastDate);
+            batch.add(schemeNameAndCodeMapEntity);
+
+            if (batch.size() == batchSize) {
+                schemeNameAndCodeMapRepository.saveAll(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            schemeNameAndCodeMapRepository.saveAll(batch);
         }
     }
 }

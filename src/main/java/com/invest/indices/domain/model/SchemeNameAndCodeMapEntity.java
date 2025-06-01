@@ -16,5 +16,12 @@ public class SchemeNameAndCodeMapEntity {
     @Id
     private Integer schemeCode;
     private String schemeName;
+    private String inceptionDate;
+    private String lastDate;
+
+    public SchemeNameAndCodeMapEntity(int schemeCode, String schemeName) {
+        this.schemeCode = schemeCode;
+        this.schemeName = schemeName;
+    }
 }
 

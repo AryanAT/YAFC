@@ -5,4 +5,6 @@ public interface CodeNameAndSchemeService {
     void saveSchemeCodeAndName();
 
     void updateSchemeNameAndSchemeCodeTable();
+
+    void updateInceptionAndEndDate();
 }
