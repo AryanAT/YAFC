@@ -3,8 +3,23 @@ package com.invest.indices.service.impl;
 import com.invest.indices.action.CalculateReturns;
 import com.invest.indices.domain.errors.InvalidResponseException;
 import com.invest.indices.domain.errors.MutualFundExistsException;
-import com.invest.indices.domain.model.*;
-import com.invest.indices.infra.repository.*;
+import com.invest.indices.domain.model.MutualFundEntity;
+import com.invest.indices.domain.model.MutualFund;
+import com.invest.indices.domain.model.PortfolioReport;
+import com.invest.indices.domain.model.ReturnInputs;
+import com.invest.indices.domain.model.ReturnOutput;
+import com.invest.indices.domain.model.SchemeNameAndCodeMapEntity;
+import com.invest.indices.infra.repository.AnnualReturnRepository;
+import com.invest.indices.infra.repository.MutualFundRepository;
+import com.invest.indices.domain.model.PriceData;
+import com.invest.indices.domain.model.AnnualReturnEntity;
+import com.invest.indices.domain.model.ThreeYearCAGR;
+import com.invest.indices.domain.model.FiveYearCAGR;
+import com.invest.indices.domain.model.SimpleSIPInput;
+import com.invest.indices.infra.repository.SchemeNameAndCodeMapRepository;
+import com.invest.indices.infra.repository.ThreeYearCAGRRepository;
+import com.invest.indices.infra.repository.FiveYearCAGRRepository;
+import com.invest.indices.domain.model.SimpleSIPOutput;
 import com.invest.indices.service.MutualFundService;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +28,6 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.Comparator;
 import java.time.LocalDate;
 import java.time.Month;
@@ -24,6 +38,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import static com.invest.indices.common.Utils.parseDate;
+import static com.invest.indices.common.Utils.roundToDouble;
 
 @Service
 public class MutualFundServiceImpl implements MutualFundService {
@@ -83,7 +99,13 @@ public class MutualFundServiceImpl implements MutualFundService {
             returnOutput.setAmountPercentageShareInPortfolio(weightedContribution);
             returnOutput.setReturnsPercentageShareInPortfolio(returnsPercentageShareInPortfolio);
         }
-        return new PortfolioReport(returnOutputs, portfolioAbsoluteReturns, portfolioInvestmentAmount, portfolioFinalAmount, portfolioProfitOrLoss);
+        return new PortfolioReport(
+                returnOutputs,
+                roundToDouble(portfolioAbsoluteReturns),
+                roundToDouble(portfolioInvestmentAmount),
+                roundToDouble(portfolioFinalAmount),
+                roundToDouble(portfolioProfitOrLoss)
+        );
     }
 
     @Override
@@ -92,7 +114,9 @@ public class MutualFundServiceImpl implements MutualFundService {
                 .stream()
                 .map(schemeNameAndCodeMapEntity -> new SchemeNameAndCodeMapEntity(
                         schemeNameAndCodeMapEntity.getSchemeCode(),
-                        schemeNameAndCodeMapEntity.getSchemeName()
+                        schemeNameAndCodeMapEntity.getSchemeName(),
+                        schemeNameAndCodeMapEntity.getInceptionDate(),
+                        schemeNameAndCodeMapEntity.getLastDate()
                         )
                 )
                 .collect(Collectors.toList());
@@ -151,11 +175,6 @@ public class MutualFundServiceImpl implements MutualFundService {
         }
 
         return filteredListOfMutualFund;
-    }
-
-    private LocalDate parseDate(String dateString) {
-        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        return LocalDate.parse(dateString, dateFormatter);
     }
 
     @Retryable(value = {RestClientException.class}, maxAttempts = 3, backoff = @Backoff(delay = 2000))

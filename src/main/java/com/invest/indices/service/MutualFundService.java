@@ -1,6 +1,13 @@
 package com.invest.indices.service;
 
-import com.invest.indices.domain.model.*;
+import com.invest.indices.domain.model.MutualFundEntity;
+import com.invest.indices.domain.model.PortfolioReport;
+import com.invest.indices.domain.model.ReturnInputs;
+import com.invest.indices.domain.model.ReturnOutput;
+import com.invest.indices.domain.model.SchemeNameAndCodeMapEntity;
+import com.invest.indices.domain.model.MutualFund;
+import com.invest.indices.domain.model.SimpleSIPInput;
+import com.invest.indices.domain.model.SimpleSIPOutput;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;

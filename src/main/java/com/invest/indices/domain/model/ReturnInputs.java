@@ -8,7 +8,7 @@ import lombok.Data;
 public class ReturnInputs {
     @JsonProperty("amount")
     private Double invAmount;
-    @JsonProperty("schemeName")
+    @JsonProperty("schemeCode")
     private int schemeCode;
     private String fromDate;
     private String toDate;

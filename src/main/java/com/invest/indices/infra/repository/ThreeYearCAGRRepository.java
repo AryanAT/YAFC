@@ -1,6 +1,5 @@
 package com.invest.indices.infra.repository;
 
-import com.invest.indices.domain.model.FiveYearCAGR;
 import com.invest.indices.domain.model.ThreeYearCAGR;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
