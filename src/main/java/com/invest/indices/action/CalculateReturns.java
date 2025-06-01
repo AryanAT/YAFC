@@ -12,14 +12,12 @@ import com.invest.indices.infra.repository.ThreeYearCAGRRepository;
 import org.decampo.xirr.Transaction;
 import org.decampo.xirr.Xirr;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import static com.invest.indices.common.Utils.roundToDouble;
 
 
 @Service
@@ -104,10 +102,6 @@ public class CalculateReturns {
                 roundToDouble(threeYearCAGR),
                 roundToDouble(fiveYearCAGR)
         );
-    }
-
-    private double roundToDouble(double value) {
-        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 
     private LocalDate adjustToStartOfMonth(LocalDate date) {
