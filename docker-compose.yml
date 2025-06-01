@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: mutual-funds-db
+    environment:
+      POSTGRES_DB: mutualfunds
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"  # expose Docker DB on host port 5433 (for inspection)
+
+  app:
+    build: .
+    image: mutual-funds-app
+    container_name: mutual-funds-app
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://mutual-funds-db:5432/mutualfunds
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    ports:
+      - "8081:8080"  # expose Docker app on host port 8081
