@@ -10,6 +10,9 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5433:5432"  # expose Docker DB on host port 5433 (for inspection)
+    # test this on new instance from docker
+    volumes:
+      - ./seeded-dump.sql:/docker-entrypoint-initdb.d/seeded-dump.sql
 
   app:
     build: .
@@ -18,7 +21,7 @@ services:
     depends_on:
       - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://mutual-funds-db:5432/mutualfunds
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mutualfunds
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
     ports:

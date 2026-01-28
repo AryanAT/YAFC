@@ -15,18 +15,21 @@ public class SchemeCodeAndNameController {
     @Autowired
     private CodeNameAndSchemeService codeNameAndSchemeService;
 
+    // Step 1
     @GetMapping("/save")
     public ResponseEntity<String> saveSchemeCodeAndName() {
         codeNameAndSchemeService.saveSchemeCodeAndName();
         return ResponseEntity.ok("SchemeCodeAndNameStored");
     }
 
+    // Step 3
     @GetMapping("/updateAllSchemeNames")
     public ResponseEntity<String> updateAllSchemeNames() {
         codeNameAndSchemeService.updateSchemeNameAndSchemeCodeTable();
         return ResponseEntity.ok("UPDATED ALL SCHEME NAMES USING MUTUAL FUNDS TABLE");
     }
 
+    // Step 4
     @PostMapping("/updateInceptionAndEndDate")
     public ResponseEntity<String> updateInceptionAndEndDate() {
         codeNameAndSchemeService.updateInceptionAndEndDate();

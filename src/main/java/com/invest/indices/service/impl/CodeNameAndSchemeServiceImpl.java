@@ -95,4 +95,17 @@ public class CodeNameAndSchemeServiceImpl implements CodeNameAndSchemeService {
             schemeNameAndCodeMapRepository.saveAll(batch);
         }
     }
+
+    @Override
+    public void initializeSchemeNameAndCode() {
+        schemeNameAndCodeMapRepository.deleteAll();
+        String url = "https://api.mfapi.in/mf";
+        SchemeNameAndCodeMapEntity[] schemeNameAndCodeMapEntities = restTemplate.getForObject(url, SchemeNameAndCodeMapEntity[].class);
+        if (schemeNameAndCodeMapEntities != null && schemeNameAndCodeMapEntities.length != 0) {
+            List<SchemeNameAndCodeMapEntity> filteredEntities = Arrays.stream(schemeNameAndCodeMapEntities).filter(
+                    schemeNameAndCodeMapEntity -> (schemeNameAndCodeMapEntity.getSchemeName().toLowerCase().contains("direct"))
+                            && schemeNameAndCodeMapEntity.getSchemeName().toLowerCase().contains("growth")).collect(Collectors.toList());
+            schemeNameAndCodeMapRepository.saveAll(filteredEntities);
+        }
+    }
 }

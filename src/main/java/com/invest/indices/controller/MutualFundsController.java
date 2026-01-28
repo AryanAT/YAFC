@@ -56,7 +56,7 @@ public class MutualFundsController {
         return mutualFundService.getHistoricalNav(id);
     }
 
-
+    // Step 2
     @GetMapping("/saveAll")
     public ResponseEntity<String> saveAllMutualFunds() {
         mutualFundService.saveAllMutualFunds();

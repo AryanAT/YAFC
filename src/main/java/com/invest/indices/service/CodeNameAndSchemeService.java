@@ -7,4 +7,6 @@ public interface CodeNameAndSchemeService {
     void updateSchemeNameAndSchemeCodeTable();
 
     void updateInceptionAndEndDate();
+
+    void initializeSchemeNameAndCode();
 }
