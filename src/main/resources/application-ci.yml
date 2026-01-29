@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:swagger-db
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  security:
+    oauth2:
+      client:
+        registration: {}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: false

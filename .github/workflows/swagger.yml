@@ -1,0 +1,48 @@
+name: Generate Swagger Docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate-swagger:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout the repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Set up Java
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 3️⃣ Build the Spring Boot app
+      - name: Build app
+        run: mvn clean package -DskipTests
+
+      # 4️⃣ Run app with CI profile in background
+      - name: Run app
+        run: |
+          nohup java -jar target/*.jar --spring.profiles.active=ci > app.log 2>&1 &
+          sleep 30
+
+      # 5️⃣ Fetch OpenAPI JSON
+      - name: Fetch OpenAPI spec
+        run: |
+          curl http://localhost:8080/v3/api-docs -o swagger-ui/openapi.json
+
+      # 6️⃣ Verify file
+      - name: Verify swagger file
+        run: ls -l swagger-ui
+
+      # 7️⃣ Publish Swagger UI to GitHub Pages
+      - name: Deploy Swagger UI to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./swagger-ui
