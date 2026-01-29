@@ -1,5 +1,6 @@
 package com.invest.indices.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.batch.core.Job;
 
 import org.springframework.batch.core.JobParameters;
@@ -21,6 +22,7 @@ public class BatchController {
     @Autowired
     private Job getAllMutualFundsHistoricalNavJob;
 
+    @Hidden
     @GetMapping("/start")
     public ResponseEntity<String> startBatchJob() {
         try {
